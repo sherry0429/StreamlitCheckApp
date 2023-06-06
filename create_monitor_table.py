@@ -49,9 +49,9 @@ def create_daily_partition_table(start_date, end_date):
 # 插入样本数据
 def insert_sample_data():
     sample_data = [
-        ("SQL", "SELECT * FROM users", "yes", datetime.now()),
-        ("URL", "https://example.com", "no", datetime.now()),
-        ("PATH", "/path/to/file", "yes", datetime.now())
+        ("1", "SQL", "SELECT * FROM users", "yes", datetime.now()),
+        ("2", "URL", "https://example.com", "no", datetime.now()),
+        ("3", "PATH", "/path/to/file", "yes", datetime.now())
     ]
     insert_query = '''
     INSERT INTO Test_monitortable_test2 (request_type, request_content, judgement_result, query_time)
