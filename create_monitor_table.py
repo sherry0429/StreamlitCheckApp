@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 conn_params = {
     'dbname': 'postgres',
     'user': 'postgres',
-    'password': '7PIug1Lk30',
+    'password': '7PIug1Lk3O',
     'host': 'pg-postgresql',
     'port': '5432',
     'sslmode': 'disable',
@@ -14,7 +14,7 @@ conn_params = {
 # 创建分区监测表
 def create_partitioned_monitoring_table():
     create_table_query = '''
-    CREATE TABLE IF NOT EXISTS Test_monitortable (
+    CREATE TABLE IF NOT EXISTS Test_monitortable_test2 (
         id SERIAL,
         request_type VARCHAR(20) NOT NULL,
         request_content TEXT NOT NULL,
@@ -37,7 +37,7 @@ def create_daily_partition_table(start_date, end_date):
     cur = conn.cursor()
     while current_date <= end_date:
         partition_table_query = '''
-        CREATE TABLE IF NOT EXISTS Test_monitortable_{date} PARTITION OF Test_monitortable
+        CREATE TABLE IF NOT EXISTS Test2_monitortable_{date} PARTITION OF Test_monitortable
         FOR VALUES FROM ('{date} 00:00:00') TO ('{date} 23:59:59');
         '''
         cur.execute(partition_table_query.format(date=current_date.strftime("%Y_%m_%d")))
@@ -54,7 +54,7 @@ def insert_sample_data():
         ("PATH", "/path/to/file", "yes", datetime.now())
     ]
     insert_query = '''
-    INSERT INTO Test_monitortable (request_type, request_content, judgement_result, query_time)
+    INSERT INTO Test_monitortable_test2 (request_type, request_content, judgement_result, query_time)
     VALUES (%s, %s, %s, %s);
     '''
     conn = psycopg2.connect(**conn_params)
@@ -66,7 +66,12 @@ def insert_sample_data():
 
 # 执行创建表和插入数据的操作
 create_partitioned_monitoring_table()
+print("1")
 start_date = datetime(2023, 6, 1).date()
+print("2")
 end_date = datetime(2023, 7, 30).date()
+print("3")
 create_daily_partition_table(start_date, end_date)
+print("4")
 insert_sample_data()
+print("5")
