@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 conn_params = {
     'dbname': 'postgres',
     'user': 'postgres',
-    'password': '200203',
-    'host': '127.0.0.1',
+    'password': '7PIug1Lk30',
+    'host': 'pg-postgresql',
     'port': '5432',
     'sslmode': 'disable',
 }
