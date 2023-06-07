@@ -1,5 +1,15 @@
 """
-this
+this code is to read the table created from rule component. The table goes:
+ CREATE TABLE IF NOT EXISTS t_check_role_code (
+        id SERIAL PRIMARY KEY,
+        role_id INTEGER REFERENCES t_check_roles (id),
+        code_block TEXT,
+        create_time TIMESTAMP DEFAULT NOW(),
+        enable BOOLEAN,
+        start_time TIMESTAMP,
+        end_time TIMESTAMP
+    );
+We traverse the entire table and execute the python code or lua code in code_block if the conditions are met. Repeat the traversal.
 """
 import psycopg2
 
