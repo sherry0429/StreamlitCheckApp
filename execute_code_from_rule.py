@@ -27,10 +27,14 @@ def execute_code_blocks():
     # 执行代码块
     for row in rows:
         code_block = row[0]
-        exec(code_block)
+        try:
+            exec(code_block)
+        except Exception as e:
+            print(f"Error executing code block: {str(e)}")
 
     cur.close()
     conn.close()
 
-# 执行搜索和执行代码块的操作
-execute_code_blocks()
+# 持续执行搜索和执行代码块的操作
+while True:
+    execute_code_blocks()
