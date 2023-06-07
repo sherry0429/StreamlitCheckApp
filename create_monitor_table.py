@@ -1,3 +1,14 @@
+"""
+create monitor table:Test_monitortable_test2 with 5 column
+{id->As an identifier
+request_type->Three options(URL,PATH,SQL)
+request_content->To store the content of those three types of options listed ahead
+judgement_result->To store the judgement of the  result after executing the rule component code
+query_time->The time when the query happened}
+already create the monitor table in pg database partitioned by day from 2023/06/01 to 2023/07/30
+the name of the partition table is Test2_monitortable_{date}
+it is an empty table now, insert_data.py will execute the code from rule component and insert data into the monitor table
+"""
 import psycopg2
 from datetime import datetime, timedelta
 
@@ -37,7 +48,7 @@ def create_daily_partition_table(start_date, end_date):
     cur = conn.cursor()
     while current_date <= end_date:
         partition_table_query = '''
-        CREATE TABLE IF NOT EXISTS Test2_monitortable_{date} PARTITION OF Test_monitortable
+        CREATE TABLE IF NOT EXISTS Test2_monitortable_{date} PARTITION OF Test_monitortable_test2
         FOR VALUES FROM ('{date} 00:00:00') TO ('{date} 23:59:59');
         '''
         cur.execute(partition_table_query.format(date=current_date.strftime("%Y_%m_%d")))
@@ -46,32 +57,10 @@ def create_daily_partition_table(start_date, end_date):
     cur.close()
     conn.close()
 
-# 插入样本数据
-def insert_sample_data():
-    sample_data = [
-        ("1", "SQL", "SELECT * FROM users", "yes", datetime.now()),
-        ("2", "URL", "https://example.com", "no", datetime.now()),
-        ("3", "PATH", "/path/to/file", "yes", datetime.now())
-    ]
-    insert_query = '''
-    INSERT INTO Test_monitortable_test2 (request_type, request_content, judgement_result, query_time)
-    VALUES (%s, %s, %s, %s);
-    '''
-    conn = psycopg2.connect(**conn_params)
-    cur = conn.cursor()
-    cur.executemany(insert_query, sample_data)
-    conn.commit()
-    cur.close()
-    conn.close()
+
 
 # 执行创建表和插入数据的操作
 create_partitioned_monitoring_table()
-print("1")
 start_date = datetime(2023, 6, 1).date()
-print("2")
 end_date = datetime(2023, 7, 30).date()
-print("3")
 create_daily_partition_table(start_date, end_date)
-print("4")
-insert_sample_data()
-print("5")
