@@ -11,8 +11,8 @@ app.conf.beat_schedule = {
         "schedule": 10,
         "args": (0, 100)
     },
-    "each1m_task": {
-        "task": "proj.tasks.time_teller",
+    "scheduled_push": {
+        "task": "proj.tasks.push",
         "schedule": crontab(minute="*/1")
     }
 }
