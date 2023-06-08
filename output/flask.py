@@ -8,7 +8,7 @@ def search():
         date = request.args.get('date')
         monitoring_type = request.args.get('monitoring_type')
     except:
-         return 0
+        return 0
     connection = psycopg2.connect(
         host="10.68.48.67",
         port="5432",
