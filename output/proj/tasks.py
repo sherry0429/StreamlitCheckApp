@@ -8,6 +8,8 @@ app.config_from_object('proj.celery_config')
 app.conf.beat_schedule = {
     "scheduled_push": {
         "task": "proj.func.push",
-        "schedule": crontab(minute="*/1")
+        "schedule": 10
     }
 }
+
+# crontab(minute="*/1")

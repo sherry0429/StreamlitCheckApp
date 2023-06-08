@@ -28,7 +28,7 @@ def db_insert(params):
         sslmode="disable"
     )
     cursor = connection.cursor()
-    query = "INSERT INTO check_output VALUES(%s,%s,%s,);"
+    query = "INSERT INTO check_output(check_time,result,details) VALUES(%s,%s,%s);"
     cursor.execute(query, params)
     connection.commit()
     cursor.close()
