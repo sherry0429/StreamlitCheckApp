@@ -7,7 +7,7 @@ judgement_result->To store the judgement of the  result after executing the rule
 query_time->The time when the query happened}
 already create the monitor table in pg database partitioned by day from 2023/06/01 to 2023/07/30
 the name of the partition table is Test2_monitortable_{date}
-it is an empty table now, insert_data.py will execute the code from rule component and insert data into the monitor table
+it is an empty table now, execute_code_from_rule.py will execute the code from rule component and insert data into the monitor table
 """
 import psycopg2
 from datetime import datetime, timedelta
