@@ -1,7 +1,6 @@
 import streamlit as st
-import psycopg2
 import datetime
-from proj.psql import log_insert,query_results
+from psql import log_insert,query_results
 # psql -h pg-postgresql -p 5432 -U postgres
 # passwd 7PIug1Lk3O
 

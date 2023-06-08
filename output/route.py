@@ -1,5 +1,5 @@
 from flask import Flask, request
-from proj.psql import log_insert,query_results
+from psql import log_insert,query_results
 from prometheus_flask_exporter import PrometheusMetrics
 
 
