@@ -1,7 +1,7 @@
 import streamlit as st
 import psycopg2
 import datetime
-from proj.psql import connect_to_pg,log_insert,query_results
+from proj.psql import log_insert,query_results
 # psql -h pg-postgresql -p 5432 -U postgres
 # passwd 7PIug1Lk3O
 
@@ -15,8 +15,10 @@ def main():
     if st.button("查询"):
         results = query_results(date, monitoring_type)
     if results is not None:
-        log_insert("success")
+        log_insert("streamlit","success")
         for result in results:
             st.write(result)
+    else:
+        log_insert("streamlit","failed")
 if __name__ == '__main__':
     main()

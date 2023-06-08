@@ -15,14 +15,14 @@ def connect_to_pg():
     connection = psycopg2.connect(**db_config)
     return connection
 
-def log_insert(result):
+def log_insert(type,result):
     connection = connect_to_pg()
     cursor = connection.cursor()
     query = """
         INSERT INTO check_output_log (output_type, result, state_time)
         VALUES (%s, %s, %s);
     """
-    params = ('streamlit',result,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    params = (type,result,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     cursor.execute(query, params)
     connection.commit()
     cursor.close()
@@ -40,8 +40,7 @@ def query_results(date, monitoring_type):
     try:
         cursor.execute(query, params)
         rows = cursor.fetchall()
-    except Exception as e:
-        log_insert("failed")
+    except:
         return None
     cursor.close()
     connection.close()
