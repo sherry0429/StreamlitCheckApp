@@ -17,6 +17,20 @@ def connect_to_pg():
     }
     connection = psycopg2.connect(**db_config)
     return connection
+
+def log_insert(result):
+    connection = connect_to_pg()
+    cursor = connection.cursor()
+    query = """
+        INSERT INTO check_output_log (output_type, result, state_time)
+        VALUES (%s, %s, %s);
+    """
+    params = ('streamlit',result,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    cursor.execute(query, params)
+    connection.commit()
+    cursor.close()
+    connection.close()
+
 # 查询监测结果
 def query_results(date, monitoring_type):
     connection = connect_to_pg()
@@ -27,20 +41,26 @@ def query_results(date, monitoring_type):
     query = "SELECT * FROM " + partition_name + " WHERE request_type = %s;"
     st.write(query)
     params = (monitoring_type,)
-    cursor.execute(query, params)
-    rows = cursor.fetchall()
+    try:
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+    except Exception as e:
+        log_insert("failed")
+        return None
     cursor.close()
     connection.close()
     return rows
 # Streamlit应用程序
 def main():
-    st.title("监测结果查询")
-    date = st.text_input("请输入日期（YYYY-MM-DD）：")
-    monitoring_type = st.text_input("请输入监测类型(url/path/sql)：")
+    st.title("Monitoring Results")
+    date = st.date_input('Select the Date:', datetime.datetime.today()).strftime('%Y-%m-%d')
+    options = ['url', 'path', 'sql']
+    monitoring_type = st.selectbox('Select the MonitoringType:', options)
     results = None
     if st.button("查询"):
         results = query_results(date, monitoring_type)
     if results is not None:
+        log_insert("success")
         for result in results:
             st.write(result)
 if __name__ == '__main__':
