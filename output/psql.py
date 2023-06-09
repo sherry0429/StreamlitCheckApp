@@ -16,6 +16,7 @@ def connect_to_pg():
     return connection
 
 def log_insert(type,result):
+    # 将日志信息插入到 check_output_log 表中
     connection = connect_to_pg()
     cursor = connection.cursor()
     query = """
