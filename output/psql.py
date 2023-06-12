@@ -1,5 +1,7 @@
 import psycopg2
 import datetime
+import random
+import string
 
 # 连接到PG数据库
 def connect_to_pg():
@@ -14,6 +16,45 @@ def connect_to_pg():
     }
     connection = psycopg2.connect(**db_config)
     return connection
+
+def generate_cookie(length=32):
+    characters = string.ascii_letters + string.digits + "_-"
+    cookie = ''.join(random.choice(characters) for _ in range(length))
+    return cookie
+
+def register(username,passwd):
+    connection = connect_to_pg()
+    cursor = connection.cursor()
+    query1 = "select * from users_table where username = %s"
+    cursor.execute(query1,(username,))
+    res1 = cursor.fetchall()
+    if len(res1):
+        cursor.close()
+        connection.close()
+        return 0
+    else:
+        set_cookie = generate_cookie(32)
+        query2 = "insert INTO users_table (username, passwd, cookie) VALUES (%s, %s, %s)"
+        params = (username,passwd,set_cookie)
+        cursor.execute(query2, params)
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return 1
+    
+def login(username,passwd):
+    connection = connect_to_pg()
+    cursor = connection.cursor()
+    query = "select cookie from users_table where username = %s AND passwd = %s"
+    params = (username,passwd)
+    cursor.execute(query,params)
+    res = cursor.fetchall()
+    if len(res):
+        return res[0][0]
+    else:
+        return 0
+
+
 
 def log_insert(type,result):
     # 将日志信息插入到 check_output_log 表中
