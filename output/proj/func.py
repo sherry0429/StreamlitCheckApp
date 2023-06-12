@@ -28,12 +28,12 @@ def db_insert(params):
         sslmode="disable"
     )
     cursor = connection.cursor()
-    query = "INSERT INTO check_output VALUES(%s,%s,%s,);"
+    query = "INSERT INTO check_output(check_time,result,details) VALUES(%s,%s,%s);"
     cursor.execute(query, params)
     connection.commit()
     cursor.close()
     connection.close()
-    return 1
+
 
 @app.task
 def push():
@@ -49,7 +49,7 @@ def push():
     try:
         rows = db_select(query)
     except:
-        return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'query failed'
+        return datetime.datetime.now().strftime("%H:%M")+'query failed'
     check = 0
     num = len(rows)
     ids = []
@@ -62,6 +62,10 @@ def push():
         params = (
             t0,f'{num} total,{check} failed',f'id {ids}'
         )
-        db_insert(params)
-    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")+'push already'
+    else:
+        params = (
+            t0,f'{num} total','None'
+        )        
+    db_insert(params)
+    return datetime.datetime.now().strftime("%H:%M")+'push already'
 
