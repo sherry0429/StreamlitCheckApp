@@ -13,3 +13,21 @@ CREATE TABLE IF NOT EXISTS check_output_log (
         result TEXT NOT NULL,
         state_time TIMESTAMP NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS users_table (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(100) NOT NULL,
+        passwd VARCHAR(100) NOT NULL,
+        cookie VARCHAR(100) NOT NULL,        
+);
+
+CREATE TABLE IF NOT EXISTS users_status (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(100) NOT NULL,
+        info  
+);
+
+--+ 清空表
+TRUNCATE TABLE check_output RESTART IDENTITY;
+
+TRUNCATE TABLE check_output_log RESTART IDENTITY;
