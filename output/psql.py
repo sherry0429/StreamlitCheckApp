@@ -2,6 +2,9 @@ import psycopg2
 import datetime
 import random
 import string
+# psql -h pg-postgresql -p 5432 -U postgres
+# passwd 7PIug1Lk3O
+
 
 # 连接到PG数据库
 def connect_to_pg():
@@ -87,3 +90,9 @@ def query_results(date, monitoring_type):
     cursor.close()
     connection.close()
     return rows
+
+
+def get_content(check):
+    connection = connect_to_pg()
+    cursor = connection.cursor()
+    query1 = "SELECT state_time FROM users_status WHERE cookie = %s"

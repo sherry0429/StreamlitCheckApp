@@ -1,10 +1,8 @@
 from flask import Flask, request, jsonify, make_response, Response
-from psql import log_insert, query_results,register,login
-import yaml
-import os
+from psql import log_insert, query_results,register,login,get_content
 import pycurl
 import time
-from StringIO import StringIO
+from io import BytesIO
 from prometheus_client.core import CollectorRegistry
 from prometheus_client import Gauge, generate_latest
 
@@ -20,7 +18,7 @@ def register_user():
             passwd = request.args.get('passwd')
         except:
             # 处理异常情况并记录日志
-            log_insert("route", "register failed")
+            log_insert("flask register", "failed")
             return jsonify({'error': 'No input'})
 
     elif request.method == 'POST':
@@ -31,7 +29,7 @@ def register_user():
             passwd = data['passwd']
         except:
             # 处理异常情况并记录日志
-            log_insert("route", "register failed")
+            log_insert("flask register", "failed")
             return jsonify({'error': 'Invalid input'})
 
     else:
@@ -39,6 +37,7 @@ def register_user():
         return jsonify({'error': ' Register Method not allowed'})
     res = register(username,passwd)
     if res:
+        log_insert("flask register","user %s register" % username)
         return 'ok'
     else:
         return 'username exited'
@@ -52,7 +51,7 @@ def login_user():
             passwd = request.args.get('passwd')
         except:
             # 处理异常情况并记录日志
-            log_insert("route", "register failed")
+            log_insert("flask login", "failed")
             return jsonify({'error': 'No input'})
 
     elif request.method == 'POST':
@@ -63,7 +62,7 @@ def login_user():
             passwd = data['passwd']
         except:
             # 处理异常情况并记录日志
-            log_insert("route", "register failed")
+            log_insert("flask login", "failed")
             return jsonify({'error': 'Invalid input'})
 
     else:
@@ -71,12 +70,23 @@ def login_user():
         return jsonify({'error': ' Register Method not allowed'})
     cookie = login(username,passwd)
     if cookie:
-        print(cookie)
+        log_insert("flask login","user %s login" % username)
         resp = make_response("login success")
-        resp.set_cookie('cookie', cookie)
+        resp.set_cookie('Cookie', cookie)
         return resp
     else:
+        log_insert("flask login","login failed")
         return "username or passwd error!"
+
+
+@app.route('/webhook', methods=['GET', 'POST'])
+def webhook():
+    cookie = request.headers.get('Cookie')
+    if cookie:
+        return 
+    else:   
+        return None
+
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
@@ -87,7 +97,7 @@ def search():
             monitoring_type = request.args.get('monitoring_type')
         except:
             # 处理异常情况并记录日志
-            log_insert("route search", "failed")
+            log_insert("flask search", "failed")
             return jsonify({'error': 'No input'})
 
     elif request.method == 'POST':
@@ -98,7 +108,7 @@ def search():
             monitoring_type = data['monitoring_type']
         except:
             # 处理异常情况并记录日志
-            log_insert("route search", "failed")
+            log_insert("flask search", "failed")
             return jsonify({'error': 'Invalid input'})
 
     else:
@@ -110,25 +120,25 @@ def search():
 
     if rows is not None:
         # 查询结果不为空，记录成功日志并返回结果
-        log_insert("route search", "success")
+        log_insert("flask search", rows)
         return jsonify({'data': rows})
     elif rows == []:
         # 查询结果为空列表，记录结果为空日志并返回结果
-        log_insert("route search", "result None")
+        log_insert("flask search", "result None")
         return jsonify({'data': rows})
     else:
         # 查询失败，记录失败日志并返回提示信息
-        log_insert("route search", "failed")
+        log_insert("flask search", "failed")
         return jsonify({'error': 'No results'})
 
 
 
 
-def get_site_status(url):
+def get_site_status(url,check):
     data = {'namelookup_time': 0, 'connect_time': 0, 'pretransfer_time': 0,
             'starttransfer_time': 0, 'total_time': 0, 'http_code': 444,
-            'size_download': 0, 'header_size': 0, 'speed_download': 0}
-    html = StringIO()
+            'size_download': 0, 'header_size': 0, 'speed_download': 0, 'content':''}
+    html = BytesIO()
     c = pycurl.Curl()
     c.setopt(pycurl.URL, url)
     # 请求连接的等待时间
@@ -173,11 +183,12 @@ def get_site_status(url):
         # 获取平均下载速度，单位 bytes/s
         speed_download = c.getinfo(c.SPEED_DOWNLOAD)
         c.close()
+        content = get_content(check)
         data = dict(namelookup_time=namelookup_time * 1000, connect_time=connect_time * 1000,
                     pretransfer_time=pretransfer_time * 1000, starttransfer_time=starttransfer_time * 1000,
                     total_time=total_time * 1000, http_code=http_code,
                     size_download=size_download, header_size=header_size,
-                    speed_download=speed_download)
+                    speed_download=speed_download,content=content)
     # 如果站点无法访问，捕获异常，并使用前面初始化的字典 data 的值
     except Exception as e:
         print ("{} connection error: {}".format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), str(e)))
@@ -199,13 +210,12 @@ http_code = Gauge('http_code', 'http code', ['url'], registry=registry)
 
 
 
-@app.route("/metrics")
+@app.route("/metrics",methods=('GET','POST'))
 def metrics():
-    filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.yml")
-    res = {'urls':['http://127.0.0.1:5001','http://127.0.0.1:8888']}
-    for url in res['urls']:
-        data = get_site_status(url)
-        for key, value in data.iteritems():
+    res = {'urls':['http://127.0.0.1:5001/search','http://127.0.0.1:5001/login','http://127.0.0.1:5001/register'],'check':['hdQhj2mh6q6kEZKt8xgp8l8K1-oPN7nk','dtI_b2gnqm3duO1dA6zm1UNhyrJVL0rw','delWVqM1w5S8fdH7xRMCTrAMVzmT5y76']}
+    for url,check in zip(res['urls'],res['check']):
+        data = get_site_status(url,check)
+        for key, value in data.items():
             if key == 'namelookup_time':
                 namelookup_time.labels(url=url).set(float(value))
             elif key == 'connect_time':
@@ -223,7 +233,7 @@ def metrics():
             elif key == 'speed_download':
                 speed_download.labels(url=url).set(float(value))
             elif key == 'http_code':
-                http_code.labels(url=url).set(float(value))
+                http_code.labels(url=url).set(int(value))
     return Response(generate_latest(registry), mimetype="text/plain")
 
 

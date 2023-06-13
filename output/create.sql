@@ -18,13 +18,14 @@ CREATE TABLE IF NOT EXISTS users_table (
         id SERIAL PRIMARY KEY,
         username VARCHAR(100) NOT NULL,
         passwd VARCHAR(100) NOT NULL,
-        cookie VARCHAR(100) NOT NULL,        
+        cookie VARCHAR(100) NOT NULL        
 );
 
 CREATE TABLE IF NOT EXISTS users_status (
         id SERIAL PRIMARY KEY,
-        username VARCHAR(100) NOT NULL,
-        info  
+        check_type VARCHAR(100) NOT NULL,
+        cookie VARCHAR(100) NOT NULL,
+        state_time TIMESTAMP NOT NULL
 );
 
 --+ 清空表
