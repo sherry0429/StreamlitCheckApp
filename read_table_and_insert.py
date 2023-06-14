@@ -1,19 +1,28 @@
 """
-this code is to read the table created from rule component. The table goes:
+Brief introduction:
+This code is to read the table created from the rule component. This table is
  CREATE TABLE IF NOT EXISTS t_check_role_code (
         id SERIAL PRIMARY KEY,
-        role_id INTEGER REFERENCES t_check_roles (id),
+        role_id TEXT REFERENCES t_check_roles (id),
         code_block TEXT,
         create_time TIMESTAMP DEFAULT NOW(),
         enable BOOLEAN,
         start_time TIMESTAMP,
         end_time TIMESTAMP
-    );
-We traverse the entire table and execute the python code or lua code in code_block if the conditions are met,and we insert the data into monitor table. Repeat the traversal.
-
+    ).
+This is the basic complete flow of the monitoring component.
+First we iterate through the table of rule components and use enable and start_time and end_time as criteria.
+The code in the code_block is read, executed and the result("yes" or "no") is obtained if the condition is met.
+Then we write all kinds of required information together with the results into the partitioned monitor table "test2_monitortable_xxxx_xx_xx"(test2_monitortable_2023_06_14 for example) created by our component with day partition.
+Compatible with executing python code and lua code.
+If the code in code_block fails to execute or reports an error, the value of judgment_result in the monitoring table is "ero"
 """
 import psycopg2
 import datetime
+import time
+import re
+import lupa
+from lupa import LuaRuntime
 
 # 数据库连接参数
 conn_params = {
@@ -33,7 +42,7 @@ def execute_code_blocks():
     # 查询满足条件的记录
     select_query = '''
     SELECT *
-    FROM t_check_role_code
+    FROM t_check_role_code_ydl
     WHERE enable = TRUE AND start_time <= NOW() AND end_time >= NOW();
     '''
     cur.execute(select_query)
@@ -43,7 +52,28 @@ def execute_code_blocks():
     for row in rows:
         id, role_id, code_block, create_time, enable, start_time, end_time = row
         try:
-            result = eval(code_block)
+            #获取满足规则的id
+            print(id)
+            code_block = code_block.strip()  # 去除代码块开头和结尾的空格
+            if code_block.startswith("def"):  # Python 代码
+                pattern = r'def (\w+)\s*\(\):'  # 使用正则表达式模式匹配函数定义
+                match = re.search(pattern, code_block)
+                if match:
+                    function_name = match.group(1)  # 获取函数名
+
+                exec(code_block)  # 执行 Python 代码
+                result = eval(f"{function_name}()")  # 获取 Python 函数的返回值
+
+            else:  # Lua 代码
+                pattern = r'function\s+(\w+)\s*\('  # 使用正则表达式模式匹配函数定义
+                match = re.search(pattern, code_block)
+                if match:
+                    function_name = match.group(1)  # 获取函数名
+
+                lua_vm = LuaRuntime()  # 创建 Lua 解释器实例
+                lua_vm.execute(code_block)  # 执行 Lua 代码
+                result = lua_vm.eval(f"{function_name}()")  # 获取 Lua 函数的返回值
+
             monitoring_result = {
                 "request_type": role_id,
                 "request_content": code_block,
@@ -52,7 +82,13 @@ def execute_code_blocks():
             }
             insert_monitoring_result(monitoring_result)
         except Exception as e:
-            print(f"Error executing code block with id {id}: {str(e)}")
+            monitoring_result = {
+                "request_type": role_id,
+                "request_content": code_block,
+                "judgement_result": 'ero',
+                "query_time": datetime.datetime.now()
+            }
+            insert_monitoring_result(monitoring_result)
 
     cur.close()
     conn.close()
@@ -65,12 +101,12 @@ def insert_monitoring_result(monitoring_result):
     cur = conn.cursor()
 
     # 使用参数绑定插入监测结果，防止sql注入
+    table_name = "test2_monitortable_" + datetime.datetime.now().strftime("%Y_%m_%d")
     query = """
-    INSERT INTO monitoring_table (id, role_id, code_block, create_time, enable, start_time, end_time, result, query_time)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
-    """
+    INSERT INTO {table} (request_type, request_content, judgement_result, query_time) VALUES (%s, %s, %s, %s)
+    """.format(table=table_name)
 
-    cur.execute(query, (monitoring_result['id'], monitoring_result['role_id'], monitoring_result['code_block'], monitoring_result['create_time'], monitoring_result['enable'], monitoring_result['start_time'], monitoring_result['end_time'], monitoring_result['result'], monitoring_result['query_time']))
+    cur.execute(query, (monitoring_result['request_type'], monitoring_result['request_content'],  monitoring_result['judgement_result'],  monitoring_result['query_time']))
 
     # 提交事务
     conn.commit()
@@ -82,3 +118,4 @@ def insert_monitoring_result(monitoring_result):
 # 持续执行搜索和执行代码块的操作
 while True:
     execute_code_blocks()
+    time.sleep(120)  
