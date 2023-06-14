@@ -28,6 +28,9 @@ CREATE TABLE IF NOT EXISTS users_status (
         state_time TIMESTAMP NOT NULL
 );
 
+--+ 登录
+psql -h pg-postgresql -p 5432 -U postgres
+7PIug1Lk3O
 --+ 清空表
 TRUNCATE TABLE check_output RESTART IDENTITY;
 

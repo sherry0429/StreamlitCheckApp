@@ -134,12 +134,13 @@ def search():
 
 
 
-def get_site_status(url,check):
+def get_site_status(url):
     data = {'namelookup_time': 0, 'connect_time': 0, 'pretransfer_time': 0,
             'starttransfer_time': 0, 'total_time': 0, 'http_code': 444,
             'size_download': 0, 'header_size': 0, 'speed_download': 0, 'content':''}
     html = BytesIO()
     c = pycurl.Curl()
+
     c.setopt(pycurl.URL, url)
     # 请求连接的等待时间
     c.setopt(pycurl.CONNECTTIMEOUT, 5)
@@ -153,10 +154,6 @@ def get_site_status(url,check):
     c.setopt(pycurl.MAXREDIRS, 1)
     # 设置保存 DNS 信息的时间为 10 秒
     c.setopt(pycurl.DNS_CACHE_TIMEOUT, 10)
-    # 设置是否返回请求头
-    # c.setopt(pycurl.HEADER, True)
-    # 设置是否返回请求体
-    # c.setopt(pycurl.NOBODY, True)
     # 设置是否验证HTTP证书
     c.setopt(pycurl.SSL_VERIFYPEER, 0)
     # 把 response body 存在 html 变量里，不输出到终端
@@ -183,12 +180,11 @@ def get_site_status(url,check):
         # 获取平均下载速度，单位 bytes/s
         speed_download = c.getinfo(c.SPEED_DOWNLOAD)
         c.close()
-        content = get_content(check)
         data = dict(namelookup_time=namelookup_time * 1000, connect_time=connect_time * 1000,
                     pretransfer_time=pretransfer_time * 1000, starttransfer_time=starttransfer_time * 1000,
                     total_time=total_time * 1000, http_code=http_code,
                     size_download=size_download, header_size=header_size,
-                    speed_download=speed_download,content=content)
+                    speed_download=speed_download)
     # 如果站点无法访问，捕获异常，并使用前面初始化的字典 data 的值
     except Exception as e:
         print ("{} connection error: {}".format(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), str(e)))
@@ -209,12 +205,11 @@ speed_download = Gauge('speed_download', 'speed download', ['url'], registry=reg
 http_code = Gauge('http_code', 'http code', ['url'], registry=registry)
 
 
-
 @app.route("/metrics",methods=('GET','POST'))
 def metrics():
-    res = {'urls':['http://127.0.0.1:5001/search','http://127.0.0.1:5001/login','http://127.0.0.1:5001/register'],'check':['hdQhj2mh6q6kEZKt8xgp8l8K1-oPN7nk','dtI_b2gnqm3duO1dA6zm1UNhyrJVL0rw','delWVqM1w5S8fdH7xRMCTrAMVzmT5y76']}
-    for url,check in zip(res['urls'],res['check']):
-        data = get_site_status(url,check)
+    res = {'urls':['http://127.0.0.1:5001/search','http://127.0.0.1:5001/login','http://127.0.0.1:5001/register']}
+    for url in res['urls']:
+        data = get_site_status(url)
         for key, value in data.items():
             if key == 'namelookup_time':
                 namelookup_time.labels(url=url).set(float(value))

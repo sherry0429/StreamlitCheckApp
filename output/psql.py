@@ -2,8 +2,7 @@ import psycopg2
 import datetime
 import random
 import string
-# psql -h pg-postgresql -p 5432 -U postgres
-# passwd 7PIug1Lk3O
+
 
 
 # 连接到PG数据库
@@ -92,7 +91,38 @@ def query_results(date, monitoring_type):
     return rows
 
 
-def get_content(check):
+def get_content(cookie,check_type):
     connection = connect_to_pg()
     cursor = connection.cursor()
-    query1 = "SELECT state_time FROM users_status WHERE cookie = %s"
+    query1 = "SELECT state_time FROM users_status WHERE cookie = %s AND check_type = %s"
+    params1 = (cookie,check_type)
+    cursor.execute(query1,params1)
+    res1 = cursor.fetchall()
+    if len(res1) > 0:
+        date_format = "%Y-%m-%d %H:%M:%S"
+        state_time = datetime.strptime(res1[0][0], date_format)
+        query2 = "SELECT * FROM check_output_log WHERE check_time >= %s"
+        params2 = (state_time,)
+        cursor.execute(query2,params2)
+        res2 = cursor.fetchall()
+        query3 = "UPDATE users_status SET state_time = %s WHERE cookie = %s AND check_type = %s"
+        time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        params3 = (time, cookie, check_type)
+        cursor.execute(query3,params3)
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return res2
+    else:
+        query2 = "SELECT * FROM check_output_log"
+        cursor.execute(query2)
+        res2 = cursor.fetchall()
+        query3 = "insert into users_status(check_type,cookie,state_time) values(%s,%s,%s)"
+        time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        params3 = (check_type,time,cookie)
+        cursor.execute(query3,params3)
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return res2
+
