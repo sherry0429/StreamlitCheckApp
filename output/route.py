@@ -207,7 +207,7 @@ http_code = Gauge('http_code', 'http code', ['url'], registry=registry)
 
 @app.route("/metrics",methods=('GET','POST'))
 def metrics():
-    res = {'urls':['http://127.0.0.1:5001/search','http://127.0.0.1:5001/login','http://127.0.0.1:5001/register']}
+    res = {'urls':['http://127.0.0.1:5001/search','http://127.0.0.1:5001/login','http://127.0.0.1:5001/register','http://127.0.0.1:8888']}
     for url in res['urls']:
         data = get_site_status(url)
         for key, value in data.items():
