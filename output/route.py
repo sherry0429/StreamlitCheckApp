@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, make_response, Response
-from psql import log_insert, query_results,register,login,get_content
+from psql import log_insert, query_results,register,login,get_content,get_name
 import pycurl
 import time
 from io import BytesIO
@@ -81,11 +81,40 @@ def login_user():
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
+    if request.method == 'GET':
+        try:
+            # 获取请求参数 date 和 monitoring_type
+            check_type = request.args.get('check_type')
+        except:
+            # 处理异常情况并记录日志
+            log_insert("webhoook", "failed")
+            return jsonify({'error': 'No input'})
+
+    elif request.method == 'POST':
+        try:
+            # 获取请求参数 date 和 monitoring_type
+            data = request.get_json()
+            check_type = data['check_type']
+        except:
+            # 处理异常情况并记录日志
+            log_insert("webhook", "failed")
+            return jsonify({'error': 'Invalid input'})
+
+    else:
+        # 返回不支持的请求方法
+        return jsonify({'error': 'Method not allowed'})
     cookie = request.headers.get('Cookie')
     if cookie:
-        return 
+        cookie = cookie.split('=')[1]
+        username = get_name(cookie)
+        if username:
+            res = get_content(cookie,check_type)
+            log_insert('webhook',('user %s get %s nums %s' % (username,check_type,len(res))))
+            return res
+        else:
+            return jsonify({'error': 'Invalid login'})
     else:   
-        return None
+        return jsonify({'error': 'Not login'})
 
 
 @app.route('/search', methods=['GET', 'POST'])
@@ -120,7 +149,7 @@ def search():
 
     if rows is not None:
         # 查询结果不为空，记录成功日志并返回结果
-        log_insert("flask search", rows)
+        log_insert("flask search", "date:%s, type:%s, nums:%s" % (date,monitoring_type,len(rows)))
         return jsonify({'data': rows})
     elif rows == []:
         # 查询结果为空列表，记录结果为空日志并返回结果
@@ -130,8 +159,6 @@ def search():
         # 查询失败，记录失败日志并返回提示信息
         log_insert("flask search", "failed")
         return jsonify({'error': 'No results'})
-
-
 
 
 def get_site_status(url):

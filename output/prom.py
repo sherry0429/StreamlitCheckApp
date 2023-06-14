@@ -34,10 +34,6 @@ def get_site_status(url):
     c.setopt(pycurl.MAXREDIRS, 1)
     # 设置保存 DNS 信息的时间为 10 秒
     c.setopt(pycurl.DNS_CACHE_TIMEOUT, 10)
-    # 设置是否返回请求头
-    # c.setopt(pycurl.HEADER, True)
-    # 设置是否返回请求体
-    # c.setopt(pycurl.NOBODY, True)
     # 设置是否验证HTTP证书
     c.setopt(pycurl.SSL_VERIFYPEER, 0)
     # 把 response body 存在 html 变量里，不输出到终端

@@ -73,23 +73,45 @@ def log_insert(type,result):
     connection.close()
 
 # 查询监测结果
-def query_results(date, monitoring_type):
+def query_results(date, monitoring_type, mode = 1):
     connection = connect_to_pg()
     cursor = connection.cursor()
-    date_format = '%Y-%m-%d'
-    date = datetime.datetime.strptime(date, date_format)
-    partition_name = 'test2_monitortable_' + date.strftime('%Y_%m_%d')
-    query = "SELECT * FROM " + partition_name + " WHERE request_type = %s;"
-    params = (monitoring_type,)
+    if mode:
+        date_format = '%Y-%m-%d'
+        date = datetime.datetime.strptime(date, date_format)
+        partition_name = 'test2_monitortable_' + date.strftime('%Y_%m_%d')
+        query = "SELECT * FROM " + partition_name + " WHERE request_type = %s ORDER BY query_time;"
+        params = (monitoring_type,)
+    else:
+        partition_name = 'test2_monitortable_' + date.strftime('%Y_%m_%d')
+        query = "SELECT * FROM " + partition_name + " WHERE request_type = %s AND query_time >= %s ORDER BY query_time;"
+        params = (monitoring_type,date)
     try:
         cursor.execute(query, params)
         rows = cursor.fetchall()
     except:
+        cursor.close()
+        connection.close()
         return None
     cursor.close()
     connection.close()
     return rows
 
+def get_name(cookie):
+    connection = connect_to_pg()
+    cursor = connection.cursor()
+    query = "SELECT username from users_table WHERE cookie = %s"
+    params = (cookie,)
+    cursor.execute(query,params)
+    res = cursor.fetchall()
+    if len(res) > 0:
+        cursor.close()
+        connection.close()
+        return res[0][0]
+    else:
+        cursor.close()
+        connection.close()
+        return None
 
 def get_content(cookie,check_type):
     connection = connect_to_pg()
@@ -99,12 +121,8 @@ def get_content(cookie,check_type):
     cursor.execute(query1,params1)
     res1 = cursor.fetchall()
     if len(res1) > 0:
-        date_format = "%Y-%m-%d %H:%M:%S"
-        state_time = datetime.strptime(res1[0][0], date_format)
-        query2 = "SELECT * FROM check_output_log WHERE check_time >= %s"
-        params2 = (state_time,)
-        cursor.execute(query2,params2)
-        res2 = cursor.fetchall()
+        state_time = res1[0][0]
+        res2 = query_results(state_time,check_type,0)     
         query3 = "UPDATE users_status SET state_time = %s WHERE cookie = %s AND check_type = %s"
         time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         params3 = (time, cookie, check_type)
@@ -114,12 +132,11 @@ def get_content(cookie,check_type):
         connection.close()
         return res2
     else:
-        query2 = "SELECT * FROM check_output_log"
-        cursor.execute(query2)
-        res2 = cursor.fetchall()
+        state_time = datetime.datetime.now().strftime("%Y-%m-%d")
+        res2 = query_results(state_time,check_type)
         query3 = "insert into users_status(check_type,cookie,state_time) values(%s,%s,%s)"
         time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        params3 = (check_type,time,cookie)
+        params3 = (check_type,cookie,time)
         cursor.execute(query3,params3)
         connection.commit()
         cursor.close()
