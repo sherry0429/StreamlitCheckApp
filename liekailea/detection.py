@@ -1,31 +1,49 @@
 import ast
-
-# 允许的Python语句和表达式
-DISALLOWED_STATEMENTS = {}
-DISALLOWED_EXPRESSIONS = {}
-# 验证代码块的合法性
-def validate_python_code_block(code_block):
-    try:
-        # 将代码块解析为抽象语法树
-        tree = ast.parse(code_block)
-
-        # 检查语法树中的每个节点是否允许
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Name) and node.id in DISALLOWED_STATEMENTS:
-                raise ValueError("禁止使用该语句")
-            elif isinstance(node, ast.BinOp) and node.op.__class__.__name__ in DISALLOWED_EXPRESSIONS:
-                raise ValueError("禁止使用该表达式")
-    except Exception as e:
-        # 如果存在错误，返回错误消息
-        return str(e)
-    # 如果代码块合法，返回None
-    return None
-
-
-
-
 import lupa
 from lupa import LuaRuntime
+import sqlparse
+# 允许的Python语句和表达式
+ALLOWED_STATEMENTS = {'abs', 'all', 'any', 'bin', 'bool', 'callable', 'chr', 'complex', 'dict', 'divmod', 'enumerate', 'float', 'format',
+    'for', 'frozenset', 'getattr', 'hasattr', 'hash', 'hex', 'id', 'int', 'isinstance', 'issubclass', 'iter', 'len',
+    'list', 'locals', 'map', 'max', 'min', 'next', 'object', 'oct', 'ord', 'pow', 'print', 'range', 'repr',
+    'reversed', 'round', 'set', 'slice', 'sorted', 'str', 'sum', 'tuple', 'type', 'zip',
+    '__import__', # 在Python 3中已经不再是内建函数
+    }
+ALLOWED_EXPRESSIONS = { '+', '-', '*', '/', '//', '%', '**', '|', '&', '^', '~', '<<', '>>', '<', '<=', '>', '>=', '==', '!=',
+    'not', 'and', 'or', 'is', 'in', 'not in'}
+# 验证代码块的合法性
+def validate_python_code_block(code_block):
+    # try:
+    #     # 使用 compile() 函数编译代码块
+    #     compile(code_block, '<string>', 'exec', ast.PyCF_ONLY_AST | ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
+
+    #     # 将代码块解析为抽象语法树
+    #     tree = ast.parse(code_block)
+
+    #     # 检查语法树中的每个节点是否允许
+    #     for node in ast.walk(tree):
+    #         if isinstance(node, ast.Name) and node.id in ALLOWED_STATEMENTS:
+    #             raise ValueError("禁止使用该语句")
+    #         elif isinstance(node, ast.BinOp) and node.op.__class__.__name__ in ALLOWED_EXPRESSIONS:
+    #             raise ValueError("禁止使用该表达式")
+    # except Exception as e:
+    #     # 如果存在错误，返回错误消息
+    #     return str(e)
+    # # 如果代码块合法，返回None
+    # return None
+    try:
+        # 使用 ast 模块解析代码
+        ast.parse(code_block, mode='exec')
+        return True
+    except SyntaxError:
+        # 如果代码存在语法错误，则返回 False
+        return False
+
+
+
+
+
+
 
 # 允许的 Lua 语句和表达式
 DISALLOWED_STATEMENTS = {}
@@ -57,9 +75,6 @@ def validate_lua_code_block(code_block):
         return str(e)
 
 
-
-
-import sqlparse
 
 def is_valid_sql_query(query):
     """
