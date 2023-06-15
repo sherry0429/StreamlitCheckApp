@@ -48,9 +48,9 @@ def check_code_block(code_block, language):
     if language == 'python':
         dete = detection.validate_python_code_block(code_block)
     elif language == 'lua':
-        detection.validate_lua_code_block(code_block)
+        dete = detection.validate_lua_code_block(code_block)
     elif language == 'sql':
-        detection.is_valid_sql_query(code_block)
+        dete = detection.is_valid_sql_query(code_block)
     else:
         raise ValueError('Unsupported language')
     return dete
@@ -59,15 +59,26 @@ def check_code_block(code_block, language):
 def page_import():
     st.header("模块导入")
     code = st.text_area("输入代码", height=200)
+    language = st.selectbox("选择代码块语言类型", ["python", "lua", "sql"])
     if st.button("导入"):
         # code = html.escape(code)# 对用户输入的代码块进行 HTML 转义
-        if (check_code_block(code, "python")):
+        if (check_code_block(code, language)):
+            # 查询数据库以获取最后一个插入的代码块的 id 值
+            with connect_to_pg() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT MAX(id) FROM t_check_roles;")
+                    last_id = cur.fetchone()[0]
+                    if last_id is None:
+                        last_id = 0
+                    new_id = last_id + 1
             try:
                 now = datetime.now()  # 获取当前时间
                 conn = connect_to_pg()  # 连接到 PostgreSQL 数据库
                 cur = conn.cursor()
-                cur.execute("INSERT INTO t_check_roles (id, code, create_time, enable) VALUES (%s, %s, %s, %s);", (current_role_id, code, now,True))
-                cur.execute("INSERT INTO t_check_role_code (role_id, code_block, create_time, start_time, end_time, enable) VALUES (%s, %s, %s, %s, NULL, %s);", (current_role_id, code, now,now,True))  # 将输入的代码插入到 t_check_role_code 表格中
+                if(language == "sql"):
+                    code = html.escape(code)# 对用户输入的代码块进行 HTML 转义
+                cur.execute("INSERT INTO t_check_roles (id, code, create_time, enable) VALUES (%s, %s, %s, %s);", (new_id, code, now,True))
+                cur.execute("INSERT INTO t_check_role_code (id,role_id, code_block, create_time, start_time, end_time, enable) VALUES (%s,%s, %s, %s, %s, NULL, %s);", (new_id,current_role_id, code, now,now,True))  # 将输入的代码插入到 t_check_role_code 表格中
                 conn.commit()  # 提交事务，保存对数据库的修改
                 st.success("代码导入成功！")
             except ValueError as e:
