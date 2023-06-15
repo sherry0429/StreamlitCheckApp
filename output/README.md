@@ -1,7 +1,7 @@
 # 启动方式
 <strong>功能：启动output组件</strong>
 
-在output路径下运行<strong>./start.sh</strong>启动，有个小问题启动后ctrl+c无法终止streamlit和celery
+在output路径下运行<strong>./start.sh</strong>启动，有个小问题启动后ctrl+c无法终止streamlit,flask和celery
 
 涉及文件：[start.sh](./start.sh)
 
