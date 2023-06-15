@@ -21,10 +21,9 @@ def main():
     if st.button("查询"):
         results = query_results(date, monitoring_type)
 
-
-    # 如果查询结果不为空，则逐个显示结果并记录日志为"streamlit"和"success"
+    # 如果查询结果不为空，则逐个显示结果并记录"streamlit"和查询结果到日志
     if results is not None:
-        log_insert("streamlit","success")
+        log_insert('streamlit','check date:%s,type:%s' % (date,monitoring_type))
         for result in results:
             st.write(result)
     # 如果查询结果为空，则记录日志为"streamlit"和"failed"
