@@ -2,15 +2,22 @@ from proj.tasks import app
 import psycopg2
 import datetime
 
+# 连接到PG数据库
+def connect_to_pg():
+
+    db_config = {
+    'dbname': 'postgres',
+    'user': 'postgres',
+    'password': '7PIug1Lk3O',
+    'host': 'pg-postgresql',
+    'port': '5432',
+    'sslmode': 'disable',
+    }
+    connection = psycopg2.connect(**db_config)
+    return connection
+
 def db_select(query):
-    connection = psycopg2.connect(
-        host="pg-postgresql",
-        port="5432",
-        dbname="postgres",
-        user="postgres",
-        password="7PIug1Lk3O",
-        sslmode="disable"
-    )
+    connection = connect_to_pg()
     cursor = connection.cursor()
     cursor.execute(query)
     rows = cursor.fetchall()
@@ -19,14 +26,7 @@ def db_select(query):
     return rows
 
 def db_insert(params):
-    connection = psycopg2.connect(
-        host="pg-postgresql",
-        port="5432",
-        dbname="postgres",
-        user="postgres",
-        password="7PIug1Lk3O",
-        sslmode="disable"
-    )
+    connection = connect_to_pg()
     cursor = connection.cursor()
     query = "INSERT INTO check_output(check_time,result,details) VALUES(%s,%s,%s);"
     cursor.execute(query, params)
