@@ -9,7 +9,7 @@
 
 ```bash
 # 执行命令并保存进程 PID
-streamlit run streamlit.py --server.port=8888 --server.address=0.0.0.0 --browser.gatherUsageStats=false --server.enableCORS=false --server.enableXsrfProtection=false &
+streamlit run streamlit.py --server.port=16593 --server.address=0.0.0.0 --browser.gatherUsageStats=false --server.enableCORS=false --server.enableXsrfProtection=false &
 pids+=("$!")
 
 python route.py &
@@ -31,7 +31,7 @@ pids+=("$!")
 涉及文件： [streamlit.py](./streamlit.py)
 
 ```bash
-streamlit run streamlit.py --server.port=8888 --server.address=0.0.0.0 --browser.gatherUsageStats=false --server.enableCORS=false --server.enableXsrfProtection=false
+streamlit run streamlit.py --server.port=16593 --server.address=0.0.0.0 --browser.gatherUsageStats=false --server.enableCORS=false --server.enableXsrfProtection=false
 ```
 
 运行端口： http://127.0.0.1:8888

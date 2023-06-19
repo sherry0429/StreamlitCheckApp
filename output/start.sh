@@ -17,7 +17,7 @@ cleanup() {
 }
 
 # 执行命令并保存进程 PID
-streamlit run streamlit.py --server.port=8888 --server.address=0.0.0.0 --browser.gatherUsageStats=false --server.enableCORS=false --server.enableXsrfProtection=false &
+streamlit run streamlit.py --server.port=16593 --server.address=0.0.0.0 --browser.gatherUsageStats=false --server.enableCORS=false --server.enableXsrfProtection=false &
 pids+=("$!")
 
 python route.py &
