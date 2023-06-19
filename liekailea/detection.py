@@ -6,14 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
 # 允许的Python语句和表达式
-ALLOWED_STATEMENTS = {'abs', 'all', 'any', 'bin', 'bool', 'callable', 'chr', 'complex', 'dict', 'divmod', 'enumerate', 'float', 'format',
-    'for', 'frozenset', 'getattr', 'hasattr', 'hash', 'hex', 'id', 'int', 'isinstance', 'issubclass', 'iter', 'len',
-    'list', 'locals', 'map', 'max', 'min', 'next', 'object', 'oct', 'ord', 'pow', 'print', 'range', 'repr',
-    'reversed', 'round', 'set', 'slice', 'sorted', 'str', 'sum', 'tuple', 'type', 'zip',
-    '__import__', # 在Python 3中已经不再是内建函数
-    }
-ALLOWED_EXPRESSIONS = { '+', '-', '*', '/', '//', '%', '**', '|', '&', '^', '~', '<<', '>>', '<', '<=', '>', '>=', '==', '!=',
-    'not', 'and', 'or', 'is', 'in', 'not in'}
+ALLOWED_STATEMENTS = {}
+ALLOWED_EXPRESSIONS = {}
 # 验证代码块的合法性
 def validate_python_code_block(code_block):
     # try:
@@ -87,24 +81,24 @@ def validate_lua_code_block(code_block):
 
 
 
-def is_valid_sql_query(query):
-    # """
-    # 检查 SQL 查询是否是有效的 SQL 语句
+# def is_valid_sql_query(query):
+#     # """
+#     # 检查 SQL 查询是否是有效的 SQL 语句
 
-    # Args:
-    #     query (str): SQL 查询语句
+#     # Args:
+#     #     query (str): SQL 查询语句
 
-    # Returns:
-    #     bool: 如果 SQL 查询是有效的 SQL 语句，则返回 True，否则返回 False
-    # """
+#     # Returns:
+#     #     bool: 如果 SQL 查询是有效的 SQL 语句，则返回 True，否则返回 False
+#     # """
 
-    # # 尝试解析 SQL 查询语句
-    # try:
-    #     engine = create_engine('sqlite://')
-    #     conn = engine.connect()
-    #     conn.execute(text(query))
-    # except Exception as e:
-    #     return False
+#     # # 尝试解析 SQL 查询语句
+#     # try:
+#     #     engine = create_engine('sqlite://')
+#     #     conn = engine.connect()
+#     #     conn.execute(text(query))
+#     # except Exception as e:
+#     #     return False
 
-    # # SQL 查询是有效的 SQL 语句
-    return True
+#     # # SQL 查询是有效的 SQL 语句
+#     return True

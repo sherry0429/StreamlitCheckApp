@@ -59,8 +59,8 @@ create_table_t_check_roles()
 def create_table_t_check_role_code():
     create_table_query = '''
     CREATE TABLE IF NOT EXISTS t_check_role_code (
-        id SERIAL PRIMARY KEY,
-        role_id TEXT REFERENCES t_check_roles (id),
+        id SERIAL PRIMARY KEY REFERENCES t_check_roles (id),
+        role_id TEXT ,
         code_block TEXT,
         create_time TIMESTAMP DEFAULT NOW(),
         enable BOOLEAN,
