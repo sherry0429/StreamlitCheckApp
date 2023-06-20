@@ -64,7 +64,7 @@ python route.py
 
 <strong>功能：定时将分区表中数据记录到对应表中</strong>
 
-涉及文件：[func.py](./proj/func.py) [task.py](./proj/task.py) [celery_config.py](./proj/celery_config.py)
+涉及文件：[func.py](./proj/func.py) [tasks.py](./proj/tasks.py) [celery_config.py](./proj/celery_config.py)
 
 ```bash
 celery -A proj.tasks worker --loglevel=info &
