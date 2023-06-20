@@ -84,7 +84,7 @@ def page_import():
                 # if(language == "sql"):
                 #     code = html.escape(code)# 对用户输入的代码块进行 HTML 转义
                 cur.execute("INSERT INTO t_check_roles (id, code, create_time, enable) VALUES (%s, %s, %s, %s);", (new_id, code, now,True))
-                cur.execute("INSERT INTO t_check_role_code (id,role_id, code_block, create_time, start_time, end_time, enable) VALUES (%s,%s, %s, %s, %s, NULL, %s);", (new_id,current_role_id, code, now,now,True))  # 将输入的代码插入到 t_check_role_code 表格中
+                cur.execute("INSERT INTO t_check_role_code (id,role_id, code_block, create_time, start_time, end_time, enable) VALUES (%s,%s, %s, %s, %s, NULL, %s);", (new_id,language, code, now,now,True))  # 将输入的代码插入到 t_check_role_code 表格中
                 conn.commit()  # 提交事务，保存对数据库的修改
                 st.success("代码导入成功！")
             except ValueError as e:
@@ -117,7 +117,7 @@ def page_management():
             code_id,role_id, code_block, create_time, start_time, end_time, enable = row
 
             # 显示模块代码块
-            with st.beta_expander(f"代码块 {code_id}"):
+            with st.expander(f"代码块 {code_id}"):
                 # 显示代码块内容
                 st.code(code_block)
 
